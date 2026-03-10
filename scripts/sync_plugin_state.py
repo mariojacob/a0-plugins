@@ -8,7 +8,7 @@ from typing import Any, NoReturn, cast
 
 import yaml
 
-from plugin_resolution import PLUGINS_DIR, REPO_ROOT, PluginResolutionError, get_plugin_names
+from plugin_resolution import PLUGINS_DIR, REPO_ROOT, PluginResolutionError, get_plugin_names, is_reserved_plugin_dirname
 
 INDEX_JSON_PATH = REPO_ROOT / "index.json"
 AUTHORS_DIR = REPO_ROOT / "authors"
@@ -148,6 +148,8 @@ def _get_owner_repo() -> tuple[str, str]:
 
 
 def _plugin_exists(plugin_name: str) -> bool:
+    if is_reserved_plugin_dirname(plugin_name):
+        return False
     return (PLUGINS_DIR / plugin_name / "plugin.yaml").exists()
 
 

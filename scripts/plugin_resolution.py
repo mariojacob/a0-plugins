@@ -59,20 +59,25 @@ def _git_all_plugin_paths(commit: str) -> list[str]:
     return [line.strip() for line in raw.splitlines() if line.strip()]
 
 
-def _normalize_plugin_names(names: list[str]) -> list[str]:
+def _normalize_plugin_names(names: list[str], *, allow_reserved: bool = False) -> list[str]:
     filtered: list[str] = []
     skipped: list[str] = []
     for n in names:
-        if n and is_valid_plugin_dirname(n) and not is_reserved_plugin_dirname(n):
+        if n and is_valid_plugin_dirname(n) and (allow_reserved or not is_reserved_plugin_dirname(n)):
             filtered.append(n)
         else:
             skipped.append(n)
 
     if skipped:
+        reason = (
+            "expected lowercase letters, numbers, underscores only"
+            if allow_reserved
+            else "expected lowercase letters, numbers, underscores only, without leading underscore"
+        )
         print(
             "Skipping invalid or reserved plugin directory names: "
             + ", ".join(sorted(set(skipped)))
-            + " (expected lowercase letters, numbers, underscores only, without leading underscore)"
+            + f" ({reason})"
         )
 
     return sorted(set(filtered))
@@ -90,7 +95,7 @@ def get_plugin_names() -> list[str]:
     plugin_names_env = os.environ.get("PLUGIN_NAMES", "").strip()
     if plugin_names_env:
         plugin_names = [n.strip() for n in plugin_names_env.split(",") if n.strip()]
-        plugin_names = _normalize_plugin_names(plugin_names)
+        plugin_names = _normalize_plugin_names(plugin_names, allow_reserved=True)
     else:
         before = os.environ.get("BEFORE_SHA", "").strip()
         after = os.environ.get("AFTER_SHA", "").strip()
